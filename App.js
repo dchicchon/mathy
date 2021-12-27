@@ -1,16 +1,16 @@
 import { StatusBar } from 'expo-status-bar';
-import { NavigationContainer } from '@react-navigation/native'
+import { NavigationContainer, useFocusEffect } from '@react-navigation/native'
+import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, View, Image, Button } from 'react-native';
+import { StyleSheet, Text, TextInput, View, Button } from 'react-native';
 
 // Create a component that will hold the card for the math equation
 
+// just send the user the numbers and let the user calculate the items on their page
 
 // We start our test and get 10 problems to do. We can either
 
-const ProblemCard = ({ problem, setProblem }) => {
-  // nums and type
-
+const ProblemCard = ({ problem, setProblem, type }) => {
   const [input, setInput] = useState('');
 
   useEffect(() => {
@@ -29,7 +29,7 @@ const ProblemCard = ({ problem, setProblem }) => {
             fontSize: 40,
             textAlign: 'right'
           }}>
-          {i === problem.nums.length - 1 ? `${problem.type} ${num}` : num}
+          {i === problem.nums.length - 1 ? `${type} ${num}` : num}
         </Text>
       ))}
     </View>
@@ -56,42 +56,28 @@ const ProblemCard = ({ problem, setProblem }) => {
 // points will allow users to customize the animations/sounds homepage that they get when they open their app
 
 // This is going to the component that will show a variety of problem sets. Will keep track of time here
-const problemArr = [
-  {
-    nums: [25, 10],
-    type: '+',
-    ans: 35
-  },
-  {
-    nums: [20, 2],
-    type: '-',
-    ans: 18
 
-  },
-  {
-    nums: [25, 10],
-    type: 'x',
-    ans: 250
-  },
-  {
-    nums: [25, 10],
-    type: '+',
-    ans: 35
-  },
-
-]
-
-const ProblemSet = () => {
+const ProblemSet = ({ problemArr, navigation, type }) => {
   const [time, setTime] = useState(0)
   const [problemNum, setProblemNum] = useState(0)
   let intervalRef = useRef();
 
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log("callback")
+      intervalRef.current = setInterval(() => setTime(prevState => prevState + 1), 1000)
+      return () => clearInterval(intervalRef.current)
+    }))
+
   useEffect(() => {
-    if (!problemNum) intervalRef.current = setInterval(() => setTime(prevState => prevState + 1), 1000)
+    console.log("Use Effect")
     if (problemNum === problemArr.length) clearInterval(intervalRef.current)
   }, [problemNum])
 
+
+
   function reset() {
+    intervalRef.current = setInterval(() => setTime(prevState => prevState + 1), 1000)
     setProblemNum(0);
     setTime(0)
   }
@@ -100,7 +86,7 @@ const ProblemSet = () => {
     return (
       <>
         <Text>You completed the problem set in {time} seconds! Congratulations</Text>
-        {/* <Button onPress={gohome} title='Home' /> */}
+        <Button onPress={() => navigation.navigate("Home")} title='Home' />
         <Button onPress={reset} title='Restart Problem Set' />
       </>
     )
@@ -108,27 +94,81 @@ const ProblemSet = () => {
 
   return (
     <>
-      {/* <Text>{time}</Text> */}
-      <ProblemCard problem={problemArr[problemNum]} setProblem={setProblemNum} />
+      <ProblemCard problem={problemArr[problemNum]} setProblem={setProblemNum} type={type} />
     </>
   )
 }
 
-const HomePage = () => {
-  return (
-    <View>
+const GamePage = ({ navigation, route }) => {
+  const { type } = route.params
+  const [problemArr, setProblemArr] = useState([])
 
+  function createProblemArr() {
+    console.log("Create Problem Set")
+    // make 10 randomly generated problems for the user to do
+    // create the problems here and then place the answer in it as well
+    let newproblemArr = []
+    for (let i = 0; i < 10; i++) {
+      let nums = new Array(Math.round(Math.random() * 100), Math.round(Math.random() * 100)).sort((a, b) => b - a)
+      let ans = 0;
+      switch (type) {
+        case '+':
+          ans = nums.reduce((a, b) => a + b)
+          break;
+        case '-':
+          ans = nums.reduce((a, b) => (Math.abs(a - b)))
+          break;
+        case 'x':
+          ans = nums.reduce((a, b) => (a * b))
+          break;
+      }
+      // i have ans here
+      let problem = {
+        nums,
+        ans
+      }
+      newproblemArr.push(problem)
+    }
+    console.log(newproblemArr)
+    setProblemArr(newproblemArr);
+  }
+
+  useEffect(() => {
+    createProblemArr();
+  }, [])
+
+  return (
+    <View style={styles.container}>
+      <ProblemSet problemArr={problemArr} navigation={navigation} type={type} />
+      <StatusBar style="auto" />
     </View>
   )
 }
 
+const HomePage = ({ navigation }) => {
+
+  return (
+    <View>
+      <Text>Mathy</Text>
+
+      {/* Make several of these */}
+      <Button title='Addition' onPress={() => navigation.navigate('Game', { type: '+' })} />
+      <Button title='Subtraction' onPress={() => navigation.navigate('Game', { type: '-' })} />
+      <Button title='Multiplication' onPress={() => navigation.navigate('Game', { type: 'x' })} />
+    </View>
+  )
+}
+
+const Stack = createNativeStackNavigator();
+
 export default function App() {
   return (
-
-    <View style={styles.container}>
-      <ProblemSet />
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen name='Home' component={HomePage} />
+        <Stack.Screen name='Game' component={GamePage} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
