@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer, useFocusEffect } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, View, Button } from 'react-native';
+import { StyleSheet, Text, TextInput, View, Button, Pressable } from 'react-native';
 
 // Create a component that will hold the card for the math equation
 
@@ -104,7 +104,6 @@ const GamePage = ({ navigation, route }) => {
   const [problemArr, setProblemArr] = useState([])
 
   function createProblemArr() {
-    console.log("Create Problem Set")
     // make 10 randomly generated problems for the user to do
     // create the problems here and then place the answer in it as well
     let newproblemArr = []
@@ -129,7 +128,6 @@ const GamePage = ({ navigation, route }) => {
       }
       newproblemArr.push(problem)
     }
-    console.log(newproblemArr)
     setProblemArr(newproblemArr);
   }
 
@@ -146,15 +144,18 @@ const GamePage = ({ navigation, route }) => {
 }
 
 const HomePage = ({ navigation }) => {
-
   return (
-    <View>
-      <Text>Mathy</Text>
-
-      {/* Make several of these */}
-      <Button title='Addition' onPress={() => navigation.navigate('Game', { type: '+' })} />
-      <Button title='Subtraction' onPress={() => navigation.navigate('Game', { type: '-' })} />
-      <Button title='Multiplication' onPress={() => navigation.navigate('Game', { type: 'x' })} />
+    <View style={styles.container}>
+      <Text style={styles.title}>Mathy</Text>
+      <Pressable style={styles.gameButton} onPress={() => navigation.navigate('Game', { type: '+' })} >
+        <Text style={styles.gameButtonText}>Addition</Text>
+      </Pressable>
+      <Pressable style={styles.gameButton} onPress={() => navigation.navigate('Game', { type: '-' })} >
+        <Text style={styles.gameButtonText}>Subtraction</Text>
+      </Pressable>
+      <Pressable style={styles.gameButton} onPress={() => navigation.navigate('Game', { type: 'x' })} >
+        <Text style={styles.gameButtonText}>Multiplication</Text>
+      </Pressable>
     </View>
   )
 }
@@ -165,7 +166,7 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen name='Home' component={HomePage} />
+        <Stack.Screen options={{ headerShown: false }} name='Home' component={HomePage} />
         <Stack.Screen name='Game' component={GamePage} />
       </Stack.Navigator>
     </NavigationContainer>
@@ -173,6 +174,10 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  title: {
+    fontSize: 36,
+    textAlign: 'center'
+  },
   container: {
     flex: 1,
     backgroundColor: '#fff',
@@ -180,4 +185,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 100
   },
+  gameButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 25,
+    height: 100,
+    borderRadius: 25,
+    width: 100,
+    backgroundColor: '#3589D7',
+  },
+  gameButtonText: {
+    color: 'white'
+  }
 });
